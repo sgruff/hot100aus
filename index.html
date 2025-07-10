@@ -95,7 +95,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, collection, onSnapshot, setDoc, getDocs, writeBatch, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const NAV_ITEMS = ['Scoreboard', 'Peems', 'Shags', 'Grimey', 'Griff'];
         const PLAYER_NAMES = NAV_ITEMS.slice(1);
@@ -105,7 +105,6 @@
         let currentView = NAV_ITEMS[0];
         let allPlayersData = {};
         let unsubscribeLeaderboard;
-        let unsubscribePlayer;
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -361,14 +360,8 @@
             await setDoc(playerDocRef, updatedPlayerData);
         }
 
-        async function main() {
+        async function initializeApp() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                
                 await setupInitialData();
                 setupListeners();
                 switchView(currentView);
@@ -382,7 +375,25 @@
             }
         }
 
-        main();
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("User authenticated, initializing app.");
+                await initializeApp();
+            } else {
+                console.log("User not authenticated, attempting sign-in.");
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Sign-in failed:", error);
+                    loader.innerHTML = `<p class="text-red-500">Error: Authentication failed.</p>`;
+                }
+            }
+        });
+
     </script>
 </body>
 </html>
