@@ -95,12 +95,18 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, collection, onSnapshot, setDoc, getDocs, writeBatch, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const NAV_ITEMS = ['Scoreboard', 'Peems', 'Shags', 'Grimey', 'Griff'];
         const PLAYER_NAMES = NAV_ITEMS.slice(1);
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "your-fallback-api-key", authDomain: "your-fallback-auth-domain", projectId: "your-fallback-project-id" };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hottest100-default';
+const firebaseConfig = {
+  apiKey: "AIzaSyDKseMXdKwsRcfem6gi2B7Fd41SjyJDuwo",
+  authDomain: "hottest100aust.firebaseapp.com",
+  projectId: "hottest100aust",
+  storageBucket: "hottest100aust.firebasestorage.app",
+  messagingSenderId: "430168985459",
+  appId: "1:430168985459:web:22222f249bbcb6532c3f06"
+};        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hottest100-default';
 
         let currentView = NAV_ITEMS[0];
         let allPlayersData = {};
@@ -268,7 +274,7 @@
                                 if (key === 'topDecade' || key === 'topArtist') {
                                     checkboxesHtml = `<div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_single" ${isCorrect ? 'checked' : ''}></div>`;
                                 } else {
-                                    checkboxesHtml = `<div class="w-[12%] flex justify-center mr-2"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_A" ${isArtistCorrect ? 'checked' : ''}></div>
+                                    checkboxesHtml = `<div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_A" ${isArtistCorrect ? 'checked' : ''}></div>
                                                     <div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_S" ${isSongCorrect ? 'checked' : ''}></div>`;
                                 }
 
@@ -360,28 +366,33 @@
             await setDoc(playerDocRef, updatedPlayerData);
         }
 
-        async function main() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                
-                await setupInitialData();
-                setupListeners();
-                switchView(currentView);
-                
-                loader.style.display = 'none';
-                mainContent.style.display = 'block';
-
-            } catch (error) {
-                console.error("Initialization Failed:", error);
-                loader.innerHTML = `<p class="text-red-500">Error: Could not connect to the live database. Please check your connection or Firebase setup.</p>`;
-            }
+        async function initializeApp() {
+            await setupInitialData();
+            setupListeners();
+            switchView(currentView);
+            
+            loader.style.display = 'none';
+            mainContent.style.display = 'block';
         }
 
-        main();
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                console.log("User authenticated, initializing app.");
+                await initializeApp();
+            } else {
+                console.log("No user found. Attempting sign-in.");
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Authentication failed:", error);
+                    loader.innerHTML = `<p class="text-red-500">Error: Authentication failed.</p>`;
+                }
+            }
+        });
 
     </script>
 </body>
