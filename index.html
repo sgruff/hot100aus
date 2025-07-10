@@ -99,18 +99,20 @@
 
         const NAV_ITEMS = ['Scoreboard', 'Peems', 'Shags', 'Grimey', 'Griff'];
         const PLAYER_NAMES = NAV_ITEMS.slice(1);
-const firebaseConfig = {
-  apiKey: "AIzaSyDKseMXdKwsRcfem6gi2B7Fd41SjyJDuwo",
-  authDomain: "hottest100aust.firebaseapp.com",
-  projectId: "hottest100aust",
-  storageBucket: "hottest100aust.firebasestorage.app",
-  messagingSenderId: "430168985459",
-  appId: "1:430168985459:web:22222f249bbcb6532c3f06"
-};        const appId = typeof __app_id !== 'undefined' ? __app_id : 'hottest100-default';
+        const firebaseConfig = {
+        apiKey: "AIzaSyDKseMXdKwsRcfem6gi2B7Fd41SjyJDuwo",
+        authDomain: "hottest100aust.firebaseapp.com",
+        projectId: "hottest100aust",
+        storageBucket: "hottest100aust.firebasestorage.app",
+        messagingSenderId: "430168985459",
+        appId: "1:430168985459:web:22222f249bbcb6532c3f06"
+        };
+        const appId = 'hottest100-default';
 
         let currentView = NAV_ITEMS[0];
         let allPlayersData = {};
         let unsubscribeLeaderboard;
+        let appInitialized = false;
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -377,11 +379,14 @@ const firebaseConfig = {
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                console.log("User authenticated, initializing app.");
-                await initializeApp();
+                if (!appInitialized) {
+                    appInitialized = true; 
+                    console.log("User authenticated, initializing app.");
+                    await initializeApp();
+                }
             } else {
-                console.log("No user found. Attempting sign-in.");
-                try {
+                 console.log("No user found. Attempting sign-in.");
+                 try {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         await signInWithCustomToken(auth, __initial_auth_token);
                     } else {
