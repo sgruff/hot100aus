@@ -276,8 +276,8 @@
                                 if (key === 'topDecade' || key === 'topArtist') {
                                     checkboxesHtml = `<div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_single" ${isCorrect ? 'checked' : ''}></div>`;
                                 } else {
-                                    checkboxesHtml = `<div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_A" ${isArtistCorrect ? 'checked' : ''}></div>
-                                                    <div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_S" ${isSongCorrect ? 'checked' : ''}></div>`;
+                                    checkboxesHtml = `<div class="w-[12%] flex justify-center mr-2"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_A" ${isArtistCorrect ? 'checked' : ''}></div>
+                                                    <div class="w-[12%] flex justify-center mr-2"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_S" ${isSongCorrect ? 'checked' : ''}></div>`;
                                 }
 
                                 return `<li class="flex items-center">
