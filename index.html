@@ -95,7 +95,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, collection, onSnapshot, setDoc, getDocs, writeBatch, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const NAV_ITEMS = ['Scoreboard', 'Peems', 'Shags', 'Grimey', 'Griff'];
         const PLAYER_NAMES = NAV_ITEMS.slice(1);
@@ -107,7 +107,7 @@
             messagingSenderId: "430168985459",
             appId: "1:430168985459:web:22222f249bbcb6532c3f06"
         };
-        const appId = 'hottest100-default'; // This can be any unique string for your app's data path
+        const appId = 'hottest100-default';
 
         let currentView = NAV_ITEMS[0];
         let allPlayersData = {};
@@ -368,36 +368,32 @@
             await setDoc(playerDocRef, updatedPlayerData);
         }
 
-        async function initializeApp() {
-            await setupInitialData();
-            setupListeners();
-            switchView(currentView);
-            
-            loader.style.display = 'none';
-            mainContent.style.display = 'block';
+        async function main() {
+            try {
+                console.log("Attempting to sign in...");
+                await signInAnonymously(auth);
+                console.log("Signed in anonymously. User:", auth.currentUser?.uid);
+                
+                console.log("Setting up initial data...");
+                await setupInitialData();
+                
+                console.log("Setting up listeners...");
+                setupListeners();
+                
+                console.log("Initializing view...");
+                switchView(currentView);
+                
+                loader.style.display = 'none';
+                mainContent.style.display = 'block';
+                console.log("App initialized successfully.");
+
+            } catch (error) {
+                console.error("Fatal error during initialization:", error);
+                loader.innerHTML = `<p class="text-red-500">Error: Could not initialize the application. Please check the console for details.</p>`;
+            }
         }
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                if (!appInitialized) {
-                    appInitialized = true; 
-                    console.log("User authenticated, initializing app.");
-                    await initializeApp();
-                }
-            } else {
-                 console.log("No user found. Attempting sign-in.");
-                 try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (error) {
-                    console.error("Authentication failed:", error);
-                    loader.innerHTML = `<p class="text-red-500">Error: Authentication failed.</p>`;
-                }
-            }
-        });
+        main();
 
     </script>
 </body>
