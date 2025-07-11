@@ -108,6 +108,8 @@
             appId: "1:430168985459:web:22222f249bbcb6532c3f06"
         };
         const appId = 'hottest100-default';
+        const BONUS_ORDER = ['topDecade', 'topArtist', 'undeserving', 'joker'];
+
 
         let currentView = NAV_ITEMS[0];
         let allPlayersData = {};
@@ -266,18 +268,19 @@
                         </ul>
                         <h4 class="font-bold text-blue-700 mt-4 mb-2">Bonuses</h4>
                         <ul class="text-sm space-y-2">
-                            ${Object.entries(p.bonuses || {}).map(([key, val]) => {
+                            ${BONUS_ORDER.map(key => {
+                                const val = p.bonuses[key] || { name: '', score: '' };
                                 const isCorrect = val.correct || false;
                                 const isArtistCorrect = val.artistCorrect || false;
                                 const isSongCorrect = val.songCorrect || false;
-                                const spanClasses = (isCorrect || isArtistCorrect || isSongCorrect) ? 'font-bold text-blue-600' : '';
+                                const spanClasses = (isCorrect || isArtistCorrect || isSongCorrect) ? 'font-bold text-blue-600 bg-blue-100 rounded' : '';
                                 
                                 let checkboxesHtml = '';
                                 if (key === 'topDecade' || key === 'topArtist') {
                                     checkboxesHtml = `<div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_single" ${isCorrect ? 'checked' : ''}></div>`;
                                 } else {
-                                    checkboxesHtml = `<div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox mr-2" data-player="${name}" data-index="${key}" data-type="bonus_A" ${isArtistCorrect ? 'checked' : ''}></div>
-                                                    <div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_S" ${isSongCorrect ? 'checked' : ''}></div>`;
+                                    checkboxesHtml = `<div class="w-[12%] flex justify-center mr-2"><input type="checkbox" class="small-checkbox mr-2" data-player="${name}" data-index="${key}" data-type="bonus_A" ${isArtistCorrect ? 'checked' : ''}></div>
+                                                    <div class="w-[12%] flex justify-center mr-2"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_S" ${isSongCorrect ? 'checked' : ''}></div>`;
                                 }
 
                                 return `<li class="flex items-center">
