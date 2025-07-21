@@ -7,13 +7,19 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root {
+            --primary-blue: #0071bc;
+            --grey: #555555;
+            --light-blue: #e5f1f8;
+            --light-grey: #aaaaaa;
+        }
+        body { font-family: 'Inter', sans-serif; color: var(--grey); }
         .form-input:focus { --tw-ring-color: #9aafad; }
         .leaderboard-dots {
             flex-grow: 1;
-            border-bottom: 2px dotted #dbeafe; /* blue-100 */
+            border-bottom: 2px dotted var(--light-blue);
             margin: 0 0.5rem;
             position: relative;
             bottom: 4px;
@@ -22,17 +28,53 @@
             transition: all 0.2s ease-in-out;
         }
         .tab.active {
-            background-color: #3b82f6; /* blue-500 */
+            background-color: var(--primary-blue);
             color: white;
             font-weight: 700;
         }
         .small-checkbox {
-            width: 1rem;
-            height: 1rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            appearance: none;
+            border: 2px solid var(--light-grey);
+            border-radius: 0.375rem; /* md */
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .small-checkbox:checked {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+        .small-checkbox:checked::after {
+            content: '';
+            display: block;
+            width: 0.35rem;
+            height: 0.7rem;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+            position: absolute;
+            left: 0.35rem;
+            top: 0.1rem;
+        }
+        .checkbox-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--grey);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .small-checkbox:checked + .checkbox-label {
+            display: none;
         }
         .loader {
             border: 4px solid #f3f4f6;
-            border-top: 4px solid #3b82f6;
+            border-top: 4px solid var(--primary-blue);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -46,48 +88,69 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-8 px-4 lg:px-[100px]">
     <!-- Main container for the ballot paper -->
-    <div id="app-container" class="bg-white p-8 sm:p-12 rounded-lg shadow-lg w-full">
+    <div id="app-container" class="bg-white p-8 sm:p-12 rounded-xl shadow-lg w-full">
         <!-- Loading State -->
         <div id="loader" class="flex justify-center items-center h-96">
             <div class="loader"></div>
         </div>
         <!-- Main Content -->
         <div id="main-content" class="hidden">
-            <!-- Header Section with Scorecard -->
-            <header class="flex flex-col sm:flex-row justify-between items-start mb-4">
-                <div class="text-left w-full sm:w-1/2">
-                    <h1 class="text-4xl sm:text-5xl font-bold text-blue-800 tracking-tight">Hottest<br>Aussie 100</h1>
-                    <div id="player-name-container" class="mt-4"></div>
+            <!-- Header Section -->
+            <header class="flex flex-col lg:flex-row justify-between items-start mb-4">
+                <div class="text-left w-full lg:w-1/4">
+                    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight" style="color: var(--primary-blue);">Aussie<br>Hottest 100</h1>
                 </div>
-                <div class="w-full sm:w-auto mt-6 sm:mt-0 sm:ml-8 flex-shrink-0">
-                    <div class="border-2 border-blue-500 rounded-lg flex w-full sm:w-[400px] mx-auto sm:mx-0">
-                        <div class="bg-blue-500 text-white p-4 rounded-l-md w-1/2 flex flex-col items-center justify-center">
-                            <h3 class="font-bold text-lg">Your score</h3>
-                            <p id="current-player-score" class="text-5xl font-bold">00</p>
-                        </div>
-                        <div class="bg-white p-4 rounded-r-md w-1/2 text-blue-800">
-                            <h3 class="font-bold text-lg text-center mb-2">Leaderboard</h3>
-                            <ul id="leaderboard-list" class="text-base space-y-1"></ul>
-                        </div>
+                <div class="w-full lg:w-1/2 flex justify-center my-4 lg:my-0">
+                    <div class="border-2 rounded-xl p-4 w-full max-w-md" style="border-color: var(--primary-blue);">
+                        <h3 class="font-bold text-lg text-center mb-2" style="color: var(--primary-blue);">Leaderboard</h3>
+                        <div id="header-leaderboard" class="grid grid-cols-2 gap-x-8 text-sm"></div>
                     </div>
+                </div>
+                <div class="w-full lg:w-1/4 text-xs space-y-1" style="color: var(--primary-blue);">
+                    <p><span class="font-bold">Artist entry (once):</span> 2pt</p>
+                    <p class="font-bold">Song correct:</p>
+                    <table class="w-full">
+                        <tbody>
+                            <tr>
+                                <td class="pr-2">100-96:</td><td class="font-semibold pr-4">10pt</td>
+                                <td class="pr-2">20-11:</td><td class="font-semibold">8pt</td>
+                            </tr>
+                            <tr>
+                                <td class="pr-2">95-61:</td><td class="font-semibold pr-4">2pt</td>
+                                <td class="pr-2">10-6:</td><td class="font-semibold">10pt</td>
+                            </tr>
+                             <tr>
+                                <td class="pr-2">60-41:</td><td class="font-semibold pr-4">4pt</td>
+                                <td class="pr-2">5-2:</td><td class="font-semibold">15pt</td>
+                            </tr>
+                             <tr>
+                                <td class="pr-2">40-21:</td><td class="font-semibold pr-4">6pt</td>
+                                <td class="pr-2">1:</td><td class="font-semibold">20pt</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p><span class="font-bold">Joker:</span> Double points</p>
+                    <p><span class="font-bold">Decade:</span> 10 points</p>
+                    <p><span class="font-bold">Artist:</span> 10 points</p>
+                    <p><span class="font-bold">Poop:</span> Undeserving entrant<br>(song only, 10 points)</p>
+                    <p><span class="font-bold">Wildcard:</span> Add anytime before #20 announced (song only, 10 points)</p>
                 </div>
             </header>
 
-            <div id="player-tabs" class="flex flex-wrap border-b-2 border-blue-200 mb-8"></div>
+            <div id="player-tabs" class="flex flex-wrap border-b-2 mb-8" style="border-color: var(--light-blue);"></div>
             
             <div id="ballot-view" class="hidden">
                 <form id="ballot-form">
                     <div class="pt-2">
-                        <h2 class="text-xl font-bold text-blue-800">Your Selections</h2>
-                        <p class="text-sm text-blue-600 mb-6">Triple points for song | Single point for same artist other song (only once, removed if your song appear later)<br>Top Ten = x2 | #1 & #100 = x10</p>
-                        <div id="selections-grid" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6"></div>
+                        <h2 class="text-xl font-bold" style="color: var(--primary-blue);">Your Selections</h2>
+                        <div id="selections-grid" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mt-4"></div>
                     </div>
-                    <div id="bonuses-section" class="mt-10 pt-6 border-t-2 border-blue-200 space-y-6"></div>
+                    <div id="bonuses-section" class="mt-10 pt-6 border-t-2 space-y-6" style="border-color: var(--light-blue);"></div>
                 </form>
             </div>
 
             <div id="scoreboard-view" class="hidden">
-                <div id="scoreboard-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"></div>
+                <div id="scoreboard-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
     </div>
@@ -97,7 +160,7 @@
         import { getFirestore, doc, collection, onSnapshot, setDoc, getDocs, writeBatch, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        const NAV_ITEMS = ['Scoreboard', 'Peems', 'Shags', 'Grimey', 'Griff'];
+        const NAV_ITEMS = ['Scoreboard', 'Pat', 'Shaggy', 'Grimey', 'Griff', 'Rach', 'Jo', 'Benji', 'Lilla', 'Higgins'];
         const PLAYER_NAMES = NAV_ITEMS.slice(1);
         const firebaseConfig = {
             apiKey: "AIzaSyDKseMXdKwsRcfem6gi2B7Fd41SjyJDuwo",
@@ -108,7 +171,7 @@
             appId: "1:430168985459:web:22222f249bbcb6532c3f06"
         };
         const appId = 'hottest100-default';
-        const BONUS_ORDER = ['topDecade', 'topArtist', 'undeserving', 'joker'];
+        const BONUS_ORDER = ['joker', 'topDecade', 'topArtist', 'poop', 'wildcard'];
 
 
         let currentView = NAV_ITEMS[0];
@@ -123,21 +186,20 @@
 
         const loader = document.getElementById('loader');
         const mainContent = document.getElementById('main-content');
-        const leaderboardList = document.getElementById('leaderboard-list');
-        const currentPlayerScoreEl = document.getElementById('current-player-score');
+        const headerLeaderboard = document.getElementById('header-leaderboard');
         const selectionsGrid = document.getElementById('selections-grid');
         const bonusesSection = document.getElementById('bonuses-section');
         const playerTabsContainer = document.getElementById('player-tabs');
-        const playerNameContainer = document.getElementById('player-name-container');
         const ballotView = document.getElementById('ballot-view');
         const scoreboardView = document.getElementById('scoreboard-view');
         const scoreboardGrid = document.getElementById('scoreboard-grid');
 
         const ICONS = {
-            topDecade: `<svg  class="w-6 h-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 48 0c26.5 0 48 21.5 48 48l0 48L0 160l0-48C0 85.5 21.5 64 48 64l48 0 0-32c0-17.7 14.3-32 32-32zM0 192l448 0 0 272c0 26.5-21.5 48-48 48L48 512c-26.5 0-48-21.5-48-48L0 192zm64 80l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm128 0l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zM64 400l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0zm112 16l0 32c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-32c0-8.8-7.2-16-16-16l-32 0c-8.8 0-16 7.2-16 16z"/></svg>`,
-            topArtist: `<svg  class="w-6 h-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M96 96l0 160c0 53 43 96 96 96s96-43 96-96l-80 0c-8.8 0-16-7.2-16-16s7.2-16 16-16l80 0 0-32-80 0c-8.8 0-16-7.2-16-16s7.2-16 16-16l80 0 0-32-80 0c-8.8 0-16-7.2-16-16s7.2-16 16-16l80 0c0-53-43-96-96-96S96 43 96 96zM320 240l0 16c0 70.7-57.3 128-128 128s-128-57.3-128-128l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 40c0 89.1 66.2 162.7 152 174.4l0 33.6-48 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l72 0 72 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-48 0 0-33.6c85.8-11.7 152-85.3 152-174.4l0-40c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 24z"/></svg>`,
-            undeserving: `<svg  class="w-6 h-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M254.4 6.6c3.5-4.3 9-6.5 14.5-5.7C315.8 7.2 352 47.4 352 96c0 11.2-1.9 22-5.5 32l5.5 0c35.3 0 64 28.7 64 64c0 19.1-8.4 36.3-21.7 48l13.7 0c39.8 0 72 32.2 72 72c0 23.2-11 43.8-28 57c34.1 5.7 60 35.3 60 71c0 39.8-32.2 72-72 72L72 512c-39.8 0-72-32.2-72-72c0-35.7 25.9-65.3 60-71c-17-13.2-28-33.8-28-57c0-39.8 32.2-72 72-72l13.7 0C104.4 228.3 96 211.1 96 192c0-35.3 28.7-64 64-64l16.2 0c44.1-.1 79.8-35.9 79.8-80c0-9.2-1.5-17.9-4.3-26.1c-1.8-5.2-.8-11.1 2.8-15.4z"/></svg>`,
-            joker: `<svg  class="w-6 h-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z"/></svg>`
+            topDecade: `<svg class="w-5 h-5" style="color: var(--primary-blue);" id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10.36 10.36"><g><path fill="currentColor" d="M0,2.3v7.37c0,.38.31.69.69.69h8.98c.38,0,.69-.31.69-.69V2.3H0ZM2.3,8.98c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM2.3,6.68c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM2.3,4.37c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM4.6,8.98c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM4.6,6.68c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM4.6,4.37c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM6.91,8.98c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM6.91,6.68c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM6.91,4.37c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM9.21,8.98c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM9.21,6.68c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69ZM9.21,4.37c0,.13-.1.23-.23.23h-.69c-.13,0-.23-.1-.23-.23v-.69c0-.13.1-.23.23-.23h.69c.13,0,.23.1.23.23v.69Z"/><path fill="currentColor" d="M10.36,1.84v-.23c0-.38-.31-.69-.69-.69h-1.61V.23c0-.13-.1-.23-.23-.23h-.69c-.13,0-.23.1-.23-.23v.69h-1.15V.23c0-.13-.1-.23-.23-.23h-.69c-.13,0-.23.1-.23-.23v.69h-1.15V.23c0-.13-.1-.23-.23-.23h-.69c-.13,0-.23.1-.23-.23v.69H.69c-.38,0-.69.31-.69.69v.23h10.36Z"/></g></svg>`,
+            topArtist: `<svg class="w-5 h-5" style="color: var(--primary-blue);" id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 7.74 11.43"><g><path fill="currentColor" d="M3.63,2.95c0,.22.17.4.37.4h1.93v.85h-1.93c-.2,0-.37.18-.37.4s.17.4.37.4h1.93v.97c0,1.21-.92,2.2-2.07,2.2s-2.06-.99-2.06-2.2v-3.78C1.8.99,2.72,0,3.86,0c.57,0,1.09.24,1.47.65.37.39.6.95.6,1.55v.36h-1.93c-.2,0-.37.18-.37.39Z"/><path fill="currentColor" d="M4.37,9.83v.6h1.48c.28,0,.5.23.5.5s-.22.5-.5.5H2c-.28,0-.5-.22-.5-.5s.22-.5.5-.5h1.37v-.59c-1.04-.1-1.85-.5-2.43-1.18C-.33,7.15.05,4.82.07,4.72c.05-.28.31-.46.58-.41.27.04.45.3.41.57-.01.02-.32,1.99.65,3.14.47.55,1.19.84,2.16.84s1.69-.29,2.16-.85c.98-1.15.66-3.11.66-3.13-.04-.27.14-.53.41-.57.27-.05.53.14.58.41.01.1.39,2.43-.88,3.94-.58.68-1.4,1.08-2.43,1.17Z"/></g></svg>`,
+            poop: `<svg class="w-5 h-5" style="color: var(--primary-blue);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M254.4 6.6c3.5-4.3 9-6.5 14.5-5.7C315.8 7.2 352 47.4 352 96c0 11.2-1.9 22-5.5 32l5.5 0c35.3 0 64 28.7 64 64c0 19.1-8.4 36.3-21.7 48l13.7 0c39.8 0 72 32.2 72 72c0 23.2-11 43.8-28 57c34.1 5.7 60 35.3 60 71c0 39.8-32.2 72-72 72L72 512c-39.8 0-72-32.2-72-72c0-35.7 25.9-65.3 60-71c-17-13.2-28-33.8-28-57c0-39.8 32.2-72 72-72l13.7 0C104.4 228.3 96 211.1 96 192c0-35.3 28.7-64 64-64l16.2 0c44.1-.1 79.8-35.9 79.8-80c0-9.2-1.5-17.9-4.3-26.1c-1.8-5.2-.8-11.1 2.8-15.4z"/></svg>`,
+            joker: `<svg class="w-5 h-5" style="color: var(--primary-blue);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path fill="currentColor" d="M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z"/></svg>`,
+            wildcard: `<svg class="w-5 h-5" style="color: var(--primary-blue);" id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9.47 12.52"><path fill="currentColor" d="M8.18.91c-.07-.57-.61-.98-1.18-.9L.91.82C.34.9-.06,1.43,0,2l1.29,9.61c.08.57.62.97,1.19.9l6.08-.82c.57-.07.98-.6.9-1.18L8.18.91ZM2.44,11.92c-.31,0-.57-.26-.57-.58s.26-.58.57-.58.58.26.58.58-.26.58-.58.58ZM7.33,5.9c-.05.27-.15.54-.28.78-.13.26-.28.49-.45.71-.17.23-.35.45-.52.66-.18.21-.36.4-.52.6-.16.2-.3.37-.42.55h-.04c-.16-.13-.34-.28-.55-.42-.21-.14-.43-.29-.65-.44-.22-.16-.45-.33-.67-.5-.23-.17-.43-.37-.62-.57-.19-.21-.35-.44-.48-.68-.13-.25-.21-.53-.26-.82-.04-.28-.03-.51.03-.72.04-.21.13-.38.24-.54.11-.14.24-.26.39-.35.17-.09.34-.15.51-.17.17-.03.33-.02.47,0,.14.02.28.07.39.13.12.07.23.14.32.23.1.08.19.17.26.27h.04c.04-.12.1-.23.17-.33.07-.12.16-.21.26-.3.1-.09.21-.17.35-.23.13-.06.28-.11.45-.13.18-.03.36,0,.54.03.17.04.33.12.47.23.15.12.28.27.38.46.1.19.17.41.21.69.04.29.03.58-.04.86ZM6.93,1.83c-.31,0-.57-.26-.57-.58s.26-.58.57-.58.58.26.58.58-.26.58-.58.58Z"/></svg>`
         };
 
         async function setupInitialData() {
@@ -154,12 +216,13 @@
                     const defaultPlayerData = {
                         name: name,
                         totalScore: 0,
-                        selections: Array.from({ length: 10 }, () => ({ name: '', score: '', artistCorrect: false, songCorrect: false })),
+                        selections: Array.from({ length: 10 }, () => ({ songName: '', artistName: '', rank: '', score: '', artistCorrect: false, songCorrect: false })),
                         bonuses: {
+                            joker: { name: '', score: '', artistCorrect: false, songCorrect: false },
                             topDecade: { name: '', score: '', correct: false },
                             topArtist: { name: '', score: '', correct: false },
-                            undeserving: { name: '', score: '', artistCorrect: false, songCorrect: false },
-                            joker: { name: '', score: '', artistCorrect: false, songCorrect: false }
+                            poop: { name: '', score: '', songCorrect: false },
+                            wildcard: { name: '', score: '', songCorrect: false }
                         }
                     };
                     batch.set(playerDocRef, defaultPlayerData);
@@ -176,6 +239,7 @@
             if (unsubscribeLeaderboard) unsubscribeLeaderboard();
             const playersColRef = collection(db, `artifacts/${appId}/public/data/players`);
             unsubscribeLeaderboard = onSnapshot(playersColRef, (snapshot) => {
+                allPlayersData = {};
                 snapshot.docs.forEach(doc => {
                     allPlayersData[doc.id] = doc.data();
                 });
@@ -183,21 +247,29 @@
                 if (currentView === 'Scoreboard') {
                     renderScoreboard();
                 }
-                updateCurrentPlayerScore();
             });
         }
         
         function renderLeaderboard() {
             const sortedPlayers = Object.values(allPlayersData).sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
-            leaderboardList.innerHTML = sortedPlayers.map(p => `
+            const half = Math.ceil(sortedPlayers.length / 2);
+            const firstHalf = sortedPlayers.slice(0, half);
+            const secondHalf = sortedPlayers.slice(half);
+
+            const renderColumn = (players, startNum) => players.map((p, i) => `
                 <li class="flex justify-between items-center">
-                    <span>${p.name}</span><span class="leaderboard-dots"></span><span class="font-bold">${p.totalScore || 0}</span>
+                    <span>${startNum + i}. ${p.name}</span><span class="leaderboard-dots"></span><span class="font-bold">${p.totalScore || 0}</span>
                 </li>`).join('');
+
+            headerLeaderboard.innerHTML = `
+                <div><ul class="space-y-1">${renderColumn(firstHalf, 1)}</ul></div>
+                <div><ul class="space-y-1">${renderColumn(secondHalf, half + 1)}</ul></div>
+            `;
         }
         
         function renderTabs() {
             playerTabsContainer.innerHTML = NAV_ITEMS.map(name => `
-                <button class="tab py-2 px-4 text-sm sm:text-base rounded-t-lg ${name === currentView ? 'active' : 'text-blue-500 hover:bg-blue-100'}" data-view="${name}">
+                <button class="tab py-2 px-4 text-sm sm:text-base rounded-lg ${name === currentView ? 'active' : 'hover:bg-blue-100'}" style="${name !== currentView ? 'color: var(--primary-blue);' : ''}">
                     ${name}
                 </button>`).join('');
             playerTabsContainer.querySelectorAll('.tab').forEach(tab => {
@@ -206,32 +278,33 @@
         }
 
         function renderBallot(playerData) {
-            let selectionsHtml = '';
-            const columns = [[], []];
-            playerData.selections.forEach((selection, index) => {
-                const html = `<div class="flex items-center space-x-3">
-                    <input type="text" placeholder="Enter name..." value="${selection.name || ''}" data-field="selections" data-index="${index}" data-type="name" class="form-input w-full h-12 border-b-2 border-blue-500 focus:border-blue-600 focus:ring-0 focus:outline-none text-lg text-blue-800 placeholder-blue-300">
-                    <input type="number" value="${selection.score || ''}" data-field="selections" data-index="${index}" data-type="score" class="form-input w-12 h-12 text-center text-xl font-bold border-2 border-blue-500 rounded-md focus:ring-2 focus:ring-blue-500">
-                </div>`;
-                columns[index < 5 ? 0 : 1].push(html);
-            });
-            selectionsGrid.innerHTML = columns.map(col => `<div class="space-y-6">${col.join('')}</div>`).join('');
+            selectionsGrid.innerHTML = (playerData.selections || []).map((selection, index) => `
+                <div class="border border-gray-200 rounded-xl p-4">
+                    <p class="font-bold text-lg mb-2" style="color: var(--primary-blue);">Selection ${index + 1}</p>
+                    <input type="text" placeholder="Song Name" value="${selection.songName || ''}" data-field="selections" data-index="${index}" data-type="songName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
+                    <input type="text" placeholder="Artist Name" value="${selection.artistName || ''}" data-field="selections" data-index="${index}" data-type="artistName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
+                    <div class="flex space-x-4">
+                        <input type="text" placeholder="Rank" value="${selection.rank || ''}" data-field="selections" data-index="${index}" data-type="rank" class="form-input w-1/2 border-b-2 focus:ring-0">
+                        <input type="number" placeholder="Score" value="${selection.score || ''}" data-field="selections" data-index="${index}" data-type="score" class="form-input w-1/2 border-b-2 focus:ring-0">
+                    </div>
+                </div>
+            `).join('');
 
             const bonusFields = [
-                { id: 'topDecade', label: 'Top Decade', desc: 'Decade with most entries in 100 (10 points)', placeholder: 'e.g., 2010s' },
-                { id: 'topArtist', label: 'Top Artist', desc: 'Artist with most entries in 100 (10 points)', placeholder: 'Enter artist name...' },
-                { id: 'undeserving', label: 'Undeserving Entrant', desc: "It'll get in, but it shouldn't (double points)", placeholder: 'Enter song name...' },
-                { id: 'joker', label: 'Joker', desc: "Play your joker at any time before song #10 is announced. (x2 and x10 multipliers don't apply)", placeholder: 'Enter song name...' }
+                { id: 'joker', label: 'Joker' },
+                { id: 'topDecade', label: 'Top Decade' },
+                { id: 'topArtist', label: 'Top Artist' },
+                { id: 'poop', label: 'Poop' },
+                { id: 'wildcard', label: 'Wildcard' }
             ];
             bonusesSection.innerHTML = bonusFields.map(field => {
                 const bonus = playerData.bonuses[field.id] || { name: '', score: '' };
                 return `<div class="flex items-end justify-between space-x-4">
                     <div class="w-full">
-                        <label class="text-xl font-bold text-blue-800">${field.label}</label>
-                        <p class="text-sm text-blue-600">${field.desc}</p>
-                        <input type="text" placeholder="${field.placeholder}" value="${bonus.name || ''}" data-field="bonuses" data-index="${field.id}" data-type="name" class="form-input w-full h-12 border-b-2 border-blue-500 focus:border-blue-600 focus:ring-0 focus:outline-none text-lg text-blue-800 placeholder-blue-300 mt-2">
+                        <label class="text-xl font-bold" style="color: var(--primary-blue);">${field.label}</label>
+                        <input type="text" placeholder="Enter name..." value="${bonus.name || ''}" data-field="bonuses" data-index="${field.id}" data-type="name" class="form-input w-full h-12 border-b-2 focus:ring-0" style="border-color: var(--primary-blue);">
                     </div>
-                    <input type="number" value="${bonus.score || ''}" data-field="bonuses" data-index="${field.id}" data-type="score" class="form-input w-12 h-12 text-center text-xl font-bold border-2 border-blue-500 rounded-md focus:ring-2 focus:ring-blue-500 flex-shrink-0">
+                    <input type="number" value="${bonus.score || ''}" data-field="bonuses" data-index="${field.id}" data-type="score" class="form-input w-12 h-12 text-center text-xl font-bold border-2 rounded-xl" style="border-color: var(--primary-blue);">
                 </div>`;
             }).join('');
             
@@ -241,57 +314,67 @@
         function renderScoreboard() {
             scoreboardGrid.innerHTML = PLAYER_NAMES.map(name => {
                 const p = allPlayersData[name] || { name, totalScore: 0, selections: [], bonuses: {} };
-                const selectionsHeader = `
-                    <div class="flex items-center text-sm font-bold text-blue-700 mb-1">
-                        <div class="w-[12%] text-center">A</div>
-                        <div class="w-[12%] text-center">S</div>
-                    </div>
-                `;
                 return `
-                <div class="border border-blue-200 rounded-lg p-4">
-                    <h3 class="text-2xl font-bold text-blue-800 text-center">${p.name} - ${p.totalScore || 0}</h3>
-                    <div class="mt-4 border-t pt-4">
-                        ${selectionsHeader}
-                        <ul class="text-sm space-y-1">
-                            ${(p.selections || []).map((s, index) => {
-                                const isArtistCorrect = s.artistCorrect || false;
-                                const isSongCorrect = s.songCorrect || false;
-                                const liClasses = isSongCorrect ? 'bg-blue-100 rounded' : '';
-                                const spanClasses = (isArtistCorrect || isSongCorrect) ? 'font-bold text-blue-600' : '';
-                                return `<li class="flex items-center p-1 ${liClasses}">
-                                    <div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${index}" data-type="A" ${isArtistCorrect ? 'checked' : ''}></div>
-                                    <div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${index}" data-type="S" ${isSongCorrect ? 'checked' : ''}></div>
-                                    <div class="w-[64%] pl-2 break-words ${spanClasses}">${s.name || '...'}</div>
-                                    <div class="w-[12%] text-right pr-2 font-semibold ${spanClasses}">(${s.score || 0})</div>
-                                </li>`
-                            }).join('')}
-                        </ul>
-                        <h4 class="font-bold text-blue-700 mt-4 mb-2">Bonuses</h4>
-                        <ul class="text-sm space-y-2">
-                            ${BONUS_ORDER.map(key => {
-                                const val = p.bonuses[key] || { name: '', score: '' };
-                                const isCorrect = val.correct || false;
-                                const isArtistCorrect = val.artistCorrect || false;
-                                const isSongCorrect = val.songCorrect || false;
-                                const spanClasses = (isCorrect || isArtistCorrect || isSongCorrect) ? 'font-bold text-blue-600 bg-blue-100 rounded' : '';
-                                
-                                let checkboxesHtml = '';
-                                if (key === 'topDecade' || key === 'topArtist') {
-                                    checkboxesHtml = `<div class="w-[12%] flex justify-center"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_single" ${isCorrect ? 'checked' : ''}></div>`;
-                                } else {
-                                    checkboxesHtml = `<div class="w-[12%] flex justify-center mr-2"><input type="checkbox" class="small-checkbox mr-2" data-player="${name}" data-index="${key}" data-type="bonus_A" ${isArtistCorrect ? 'checked' : ''}></div>
-                                                    <div class="w-[12%] flex justify-center mr-2"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${key}" data-type="bonus_S" ${isSongCorrect ? 'checked' : ''}></div>`;
-                                }
+                <div class="border-2 rounded-xl p-2" style="border-color: var(--primary-blue);">
+                    <h3 class="text-xl font-bold text-center mb-2" style="color: var(--primary-blue);">${p.name} - ${p.totalScore || 0}</h3>
+                    <ul class="text-xs space-y-1">
+                        ${(p.selections || []).map((s, index) => {
+                            const isArtistCorrect = s.artistCorrect || false;
+                            const isSongCorrect = s.songCorrect || false;
+                            const isJoker = index === 0;
+                            
+                            let songClasses = 'italic font-extralight';
+                            let artistClasses = 'font-extralight';
+                            let textStyle = `color: var(--grey);`;
+                            let scoreStyle = `color: var(--light-grey);`;
+                            let backgroundStyle = '';
 
-                                return `<li class="flex items-center">
-                                    <div class="w-8 flex justify-center items-center flex-shrink-0">${ICONS[key]}</div>
-                                    <div class="flex items-center w-[24%] ml-2">${checkboxesHtml}</div>
-                                    <div class="flex-1 pl-2 break-words ${spanClasses}">${val.name || '...'}</div>
-                                    <div class="w-[12%] text-right pr-2 font-semibold ${spanClasses}">(${val.score || 0})</div>
-                                </li>`
-                            }).join('')}
-                        </ul>
-                    </div>
+                            if (isSongCorrect) {
+                                songClasses = 'italic font-semibold';
+                                artistClasses = 'font-semibold';
+                                textStyle = `color: var(--primary-blue);`;
+                                scoreStyle = `color: var(--grey);`;
+                                backgroundStyle = `background-color: var(--light-blue);`;
+                            } else if (isArtistCorrect) {
+                                artistClasses = 'font-semibold';
+                                textStyle = `color: var(--primary-blue);`;
+                                scoreStyle = `color: var(--grey);`;
+                            }
+
+                            const borderClass = isJoker ? 'border-2 rounded-md' : '';
+                            const borderColor = isJoker ? `border-color: var(--primary-blue);` : '';
+
+                            return `<li class="flex items-center p-1 rounded-md ${borderClass}" style="${backgroundStyle} ${borderColor}">
+                                <div class="w-6 flex-shrink-0">${isJoker ? ICONS.joker : ''}</div>
+                                <div class="relative"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${index}" data-type="A" ${isArtistCorrect ? 'checked' : ''}><span class="checkbox-label">A</span></div>
+                                <div class="relative ml-1"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${index}" data-type="S" ${isSongCorrect ? 'checked' : ''}><span class="checkbox-label">S</span></div>
+                                <div class="flex-1 break-words ml-2" style="${textStyle}">
+                                    <p class="${songClasses}">${s.songName || '...'}</p>
+                                    <p class="${artistClasses}">${s.artistName || '...'}</p>
+                                </div>
+                                <div class="text-right ml-1" style="${scoreStyle}">
+                                    <p>#${s.rank || '--'}</p>
+                                    <p class="font-bold">(${s.score || 0})</p>
+                                </div>
+                            </li>`
+                        }).join('')}
+                    </ul>
+                    <h4 class="font-bold text-center mt-2 mb-1" style="color: var(--primary-blue);">Bonus</h4>
+                    <ul class="text-xs space-y-1">
+                        ${BONUS_ORDER.map(key => {
+                             if(key === 'joker') return '';
+                             const val = p.bonuses[key] || { name: '', score: '' };
+                             const isCorrect = val.correct || false;
+                             const textStyle = isCorrect ? `color: var(--primary-blue); font-weight: 600;` : `color: var(--grey);`;
+                             const backgroundStyle = isCorrect ? `background-color: var(--light-blue);` : '';
+                             return `<li class="flex items-center p-1 rounded-md" style="${backgroundStyle}">
+                                <div class="w-6 flex-shrink-0 mr-2">${ICONS[key]}</div>
+                                <div class="relative"><input type="checkbox" class="small-checkbox mx-1" data-player="${name}" data-index="${key}" data-type="bonus_single" ${isCorrect ? 'checked' : ''}></div>
+                                <div class="flex-1 break-words ml-2" style="${textStyle}">${val.name || '...'}</div>
+                                <div class="text-right ml-1 font-semibold" style="${textStyle}">(${val.score || 0})</div>
+                             </li>`
+                        }).join('')}
+                    </ul>
                 </div>`;
             }).join('');
 
@@ -300,37 +383,23 @@
             });
         }
 
-        function updateCurrentPlayerScore() {
-            const playerData = allPlayersData[currentView];
-            if (playerData) {
-                currentPlayerScoreEl.textContent = String(playerData.totalScore || 0).padStart(2, '0');
-            } else {
-                const sortedPlayers = Object.values(allPlayersData).sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
-                const leaderScore = sortedPlayers.length > 0 ? sortedPlayers[0].totalScore : 0;
-                currentPlayerScoreEl.textContent = String(leaderScore || 0).padStart(2, '0');
-            }
-        }
-
         function switchView(newView) {
             currentView = newView;
             renderTabs();
             if (newView === 'Scoreboard') {
-                playerNameContainer.innerHTML = `<h2 class="text-lg font-bold uppercase text-blue-800">Scoreboard</h2>`;
                 scoreboardView.style.display = 'block';
                 ballotView.style.display = 'none';
                 renderScoreboard();
             } else {
-                playerNameContainer.innerHTML = `<input type="text" value="${newView}" class="form-input w-full max-w-xs h-12 border-b-2 border-blue-500 focus:border-blue-600 focus:ring-0 focus:outline-none text-lg text-blue-800 placeholder-blue-300" readonly>`;
                 scoreboardView.style.display = 'none';
                 ballotView.style.display = 'block';
                 renderBallot(allPlayersData[currentView]);
             }
-            updateCurrentPlayerScore();
         }
         
         async function handleInputChange(e) {
             const { field, index, type } = e.target.dataset;
-            const value = (type === 'score') ? parseInt(e.target.value) || 0 : e.target.value;
+            const value = (type === 'score' || type === 'rank') ? e.target.value : e.target.value;
             let updatedPlayerData = JSON.parse(JSON.stringify(allPlayersData[currentView]));
 
             if (field === 'selections') {
@@ -360,43 +429,40 @@
             } else if (type === 'S') {
                 updatedPlayerData.selections[index].songCorrect = isChecked;
             } else if (type === 'bonus_single') {
+                if (!updatedPlayerData.bonuses[index]) updatedPlayerData.bonuses[index] = {};
                 updatedPlayerData.bonuses[index].correct = isChecked;
-            } else if (type === 'bonus_A') {
-                updatedPlayerData.bonuses[index].artistCorrect = isChecked;
-            } else if (type === 'bonus_S') {
-                updatedPlayerData.bonuses[index].songCorrect = isChecked;
             }
 
             const playerDocRef = doc(db, `artifacts/${appId}/public/data/players`, player);
             await setDoc(playerDocRef, updatedPlayerData);
         }
 
-        async function main() {
-            try {
-                console.log("Attempting to sign in...");
-                await signInAnonymously(auth);
-                console.log("Signed in anonymously. User:", auth.currentUser?.uid);
-                
-                console.log("Setting up initial data...");
-                await setupInitialData();
-                
-                console.log("Setting up listeners...");
-                setupListeners();
-                
-                console.log("Initializing view...");
-                switchView(currentView);
-                
-                loader.style.display = 'none';
-                mainContent.style.display = 'block';
-                console.log("App initialized successfully.");
-
-            } catch (error) {
-                console.error("Fatal error during initialization:", error);
-                loader.innerHTML = `<p class="text-red-500">Error: Could not initialize the application. Please check the console for details.</p>`;
-            }
+        async function startApp() {
+            await setupInitialData();
+            setupListeners();
+            switchView(currentView);
+            
+            loader.style.display = 'none';
+            mainContent.style.display = 'block';
         }
 
-        main();
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                if (!appInitialized) {
+                    appInitialized = true; 
+                    console.log("User authenticated, initializing app.");
+                    await startApp();
+                }
+            } else {
+                 console.log("No user found. Attempting sign-in.");
+                 try {
+                    await signInAnonymously(auth);
+                } catch (error) {
+                    console.error("Anonymous sign-in failed:", error);
+                    loader.innerHTML = `<p class="text-red-500">Error: Authentication failed.</p>`;
+                }
+            }
+        });
 
     </script>
 </body>
