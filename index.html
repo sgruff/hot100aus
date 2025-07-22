@@ -106,26 +106,26 @@
                         <div id="header-leaderboard" class="grid grid-cols-2 gap-x-8 text-sm"></div>
                     </div>
                 </div>
-                <div class="w-full lg:w-1/4 text-xs space-y-1" style="color: var(--primary-blue);">
+                <div class="w-full lg:w-auto text-xs space-y-1" style="color: var(--primary-blue);">
                     <p><span class="font-bold">Artist entry (once):</span> 2pt</p>
                     <p class="font-bold">Song correct:</p>
                     <table class="w-full">
                         <tbody>
                             <tr>
-                                <td class="pr-2">100-96:</td><td class="font-semibold pr-4">10pt</td>
-                                <td class="pr-2">20-11:</td><td class="font-semibold">8pt</td>
+                                <td class="pr-1">100-96:</td><td class="font-semibold pr-2">10pt</td>
+                                <td class="pr-1">20-11:</td><td class="font-semibold">8pt</td>
                             </tr>
                             <tr>
-                                <td class="pr-2">95-61:</td><td class="font-semibold pr-4">2pt</td>
-                                <td class="pr-2">10-6:</td><td class="font-semibold">10pt</td>
+                                <td class="pr-1">95-61:</td><td class="font-semibold pr-2">2pt</td>
+                                <td class="pr-1">10-6:</td><td class="font-semibold">10pt</td>
                             </tr>
                              <tr>
-                                <td class="pr-2">60-41:</td><td class="font-semibold pr-4">4pt</td>
-                                <td class="pr-2">5-2:</td><td class="font-semibold">15pt</td>
+                                <td class="pr-1">60-41:</td><td class="font-semibold pr-2">4pt</td>
+                                <td class="pr-1">5-2:</td><td class="font-semibold">15pt</td>
                             </tr>
                              <tr>
-                                <td class="pr-2">40-21:</td><td class="font-semibold pr-4">6pt</td>
-                                <td class="pr-2">1:</td><td class="font-semibold">20pt</td>
+                                <td class="pr-1">40-21:</td><td class="font-semibold pr-2">6pt</td>
+                                <td class="pr-1">1:</td><td class="font-semibold">20pt</td>
                             </tr>
                         </tbody>
                     </table>
@@ -133,7 +133,7 @@
                     <p><span class="font-bold">Decade:</span> 10 points</p>
                     <p><span class="font-bold">Artist:</span> 10 points</p>
                     <p><span class="font-bold">Poop:</span> Undeserving entrant<br>(song only, 10 points)</p>
-                    <p><span class="font-bold">Wildcard:</span> Add anytime before #20 announced (song only, 10 points)</p>
+                    <p><span class="font-bold">Wildcard:</span> Add anytime before #20<br>announced (song only, 10 points)</p>
                 </div>
             </header>
 
@@ -246,6 +246,8 @@
                 renderLeaderboard();
                 if (currentView === 'Scoreboard') {
                     renderScoreboard();
+                } else if (allPlayersData[currentView]) {
+                    renderBallot(allPlayersData[currentView]);
                 }
             });
         }
@@ -278,7 +280,12 @@
         }
 
         function renderBallot(playerData) {
-            selectionsGrid.innerHTML = (playerData.selections || []).map((selection, index) => `
+            const safePlayerData = playerData || {
+                selections: Array.from({ length: 10 }, () => ({ songName: '', artistName: '', rank: '', score: '' })),
+                bonuses: {}
+            };
+
+            selectionsGrid.innerHTML = (safePlayerData.selections || []).map((selection, index) => `
                 <div class="border border-gray-200 rounded-xl p-4">
                     <p class="font-bold text-lg mb-2" style="color: var(--primary-blue);">Selection ${index + 1}</p>
                     <input type="text" placeholder="Song Name" value="${selection.songName || ''}" data-field="selections" data-index="${index}" data-type="songName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
@@ -298,7 +305,7 @@
                 { id: 'wildcard', label: 'Wildcard' }
             ];
             bonusesSection.innerHTML = bonusFields.map(field => {
-                const bonus = playerData.bonuses[field.id] || { name: '', score: '' };
+                const bonus = safePlayerData.bonuses[field.id] || { name: '', score: '' };
                 return `<div class="flex items-end justify-between space-x-4">
                     <div class="w-full">
                         <label class="text-xl font-bold" style="color: var(--primary-blue);">${field.label}</label>
@@ -315,7 +322,7 @@
             scoreboardGrid.innerHTML = PLAYER_NAMES.map(name => {
                 const p = allPlayersData[name] || { name, totalScore: 0, selections: [], bonuses: {} };
                 return `
-                <div class="border-2 rounded-xl p-2" style="border-color: var(--primary-blue);">
+                <div class="border-2 rounded-xl p-2" style="border-color: var(--light-blue);">
                     <h3 class="text-xl font-bold text-center mb-2" style="color: var(--primary-blue);">${p.name} - ${p.totalScore || 0}</h3>
                     <ul class="text-xs space-y-1">
                         ${(p.selections || []).map((s, index) => {
@@ -338,10 +345,9 @@
                             } else if (isArtistCorrect) {
                                 artistClasses = 'font-semibold';
                                 textStyle = `color: var(--primary-blue);`;
-                                scoreStyle = `color: var(--grey);`;
                             }
 
-                            const borderClass = isJoker ? 'border-2 rounded-md' : '';
+                            const borderClass = isJoker ? 'border rounded-md' : '';
                             const borderColor = isJoker ? `border-color: var(--primary-blue);` : '';
 
                             return `<li class="flex items-center p-1 rounded-md ${borderClass}" style="${backgroundStyle} ${borderColor}">
@@ -398,6 +404,7 @@
         }
         
         async function handleInputChange(e) {
+            if (!allPlayersData[currentView]) return;
             const { field, index, type } = e.target.dataset;
             const value = (type === 'score' || type === 'rank') ? e.target.value : e.target.value;
             let updatedPlayerData = JSON.parse(JSON.stringify(allPlayersData[currentView]));
@@ -421,6 +428,7 @@
 
         async function handleScoreboardCheckboxChange(e) {
             const { player, index, type } = e.target.dataset;
+            if (!allPlayersData[player]) return;
             const isChecked = e.target.checked;
             let updatedPlayerData = JSON.parse(JSON.stringify(allPlayersData[player]));
 
