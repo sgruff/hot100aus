@@ -531,7 +531,7 @@
                 
                 let currentSelectionScore = rankScore + artistScore;
                 
-                if (index === 0 && rankScore > 0) { // Joker doubles the rank and artist score
+if (index === 0 && (rankScore > 0 || artistScore > 0)) { // Joker doubles the rank and artist score
                     currentSelectionScore *= 2;
                 }
                 
