@@ -108,15 +108,11 @@
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-8 px-4 lg:px-[100px]">
-    <!-- Main container for the ballot paper -->
     <div id="app-container" class="bg-white p-8 sm:p-12 rounded-xl shadow-lg w-full">
-        <!-- Loading State -->
         <div id="loader" class="flex justify-center items-center h-96">
             <div class="loader"></div>
         </div>
-        <!-- Main Content -->
         <div id="main-content" class="hidden">
-            <!-- Header Section -->
             <header class="flex flex-col lg:flex-row justify-between items-start mb-4">
                 <div class="text-left w-full lg:w-1/4">
                     <h1 class="text-4xl sm:text-5xl font-bold tracking-tight" style="color: var(--primary-blue);">Aussie<br>Hottest 100</h1>
@@ -133,11 +129,11 @@
                     <table class="w-full">
                         <tbody>
                             <tr>
-                                <td class="pr-1">100-96:</td><td class="font-semibold pr-2">10pt</td>
+                                <td class="pr-1">100-91:</td><td class="font-semibold pr-2">10pt</td>
                                 <td class="pr-1">20-11:</td><td class="font-semibold">8pt</td>
                             </tr>
                             <tr>
-                                <td class="pr-1">95-61:</td><td class="font-semibold pr-2">2pt</td>
+                                <td class="pr-1">90-61:</td><td class="font-semibold pr-2">2pt</td>
                                 <td class="pr-1">10-6:</td><td class="font-semibold">10pt</td>
                             </tr>
                              <tr>
@@ -260,10 +256,25 @@
             if (unsubscribeLeaderboard) unsubscribeLeaderboard();
             const playersColRef = collection(db, `artifacts/${appId}/public/data/players`);
             unsubscribeLeaderboard = onSnapshot(playersColRef, (snapshot) => {
-                allPlayersData = {};
-                snapshot.docs.forEach(doc => {
-                    allPlayersData[doc.id] = doc.data();
-                });
+                const docChanges = snapshot.docChanges();
+                // If there are many changes, it's an initial load, so rebuild everything.
+                // Otherwise, only update the changed docs to prevent re-rendering active inputs.
+                if (docChanges.length > PLAYER_NAMES.length / 2) { 
+                    allPlayersData = {};
+                    snapshot.docs.forEach(doc => {
+                        allPlayersData[doc.id] = doc.data();
+                    });
+                } else {
+                    docChanges.forEach((change) => {
+                        if (change.type === "added" || change.type === "modified") {
+                            allPlayersData[change.doc.id] = change.doc.data();
+                        }
+                        if (change.type === "removed") {
+                            delete allPlayersData[change.doc.id];
+                        }
+                    });
+                }
+
                 renderLeaderboard();
                 if (currentView === 'Scoreboard') {
                     renderScoreboard();
@@ -336,7 +347,7 @@
                 </div>`;
             }).join('');
             
-            document.querySelectorAll('#ballot-form input').forEach(input => input.addEventListener('input', handleInputChange));
+            document.querySelectorAll('#ballot-form input').forEach(input => input.addEventListener('change', handleInputChange));
         }
 
         function renderScoreboard() {
@@ -409,7 +420,7 @@
                 box.addEventListener('change', handleScoreboardCheckboxChange);
             });
             scoreboardGrid.querySelectorAll('input[type="number"]').forEach(input => {
-                input.addEventListener('input', handleScoreboardRankChange);
+                input.addEventListener('change', handleScoreboardRankChange);
             });
         }
 
@@ -423,6 +434,10 @@
             } else {
                 scoreboardView.style.display = 'none';
                 ballotView.style.display = 'block';
+                // Render a blank ballot immediately to prevent interaction with old data
+                selectionsGrid.innerHTML = ''; 
+                bonusesSection.innerHTML = '';
+                // The onSnapshot listener will fill it with data when it arrives
                 if (allPlayersData[currentView]) {
                     renderBallot(allPlayersData[currentView]);
                 }
@@ -468,7 +483,7 @@
             const playerDocRef = doc(db, `artifacts/${appId}/public/data/players`, player);
             await setDoc(playerDocRef, updatedPlayerData);
         }
-
+        
         async function handleScoreboardRankChange(e) {
             const { player, index } = e.target.dataset;
             if (!allPlayersData[player]) return;
@@ -484,16 +499,34 @@
             await setDoc(playerDocRef, updatedPlayerData);
         }
         
+        function getScoreForRank(rankStr) {
+            const rank = parseInt(rankStr, 10);
+            if (isNaN(rank)) return 0;
+            if (rank === 1) return 20;
+            if (rank >= 2 && rank <= 5) return 15;
+            if (rank >= 6 && rank <= 10) return 10;
+            if (rank >= 11 && rank <= 20) return 8;
+            if (rank >= 21 && rank <= 40) return 6;
+            if (rank >= 41 && rank <= 60) return 4;
+            if (rank >= 61 && rank <= 90) return 2;
+            if (rank >= 91 && rank <= 100) return 10;
+            return 0;
+        }
+
         function recalculateTotalScore(playerData) {
             let totalScore = 0;
-            (playerData.selections || []).forEach(sel => {
-                let selectionScore = 0;
-                if (sel.artistCorrect) {
-                    selectionScore += 2;
+            (playerData.selections || []).forEach((sel, index) => {
+                let rankScore = getScoreForRank(sel.rank);
+                let artistScore = sel.artistCorrect ? 2 : 0;
+                
+                let currentSelectionScore = rankScore + artistScore;
+                
+                if (index === 0 && rankScore > 0) { // Joker doubles the rank and artist score
+                    currentSelectionScore *= 2;
                 }
-                // Rank-based scoring will be added here
-                sel.score = selectionScore;
-                totalScore += selectionScore;
+                
+                sel.score = currentSelectionScore;
+                totalScore += currentSelectionScore;
             });
 
             BONUS_ORDER.forEach(key => {
