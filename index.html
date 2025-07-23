@@ -198,7 +198,7 @@
             appId: "1:430168985459:web:22222f249bbcb6532c3f06"
         };
         const appId = 'hottest100-default';
-        const BONUS_ORDER = ['joker', 'topDecade', 'topArtist', 'poop', 'wildcard'];
+        const BONUS_ORDER = ['topDecade', 'topArtist', 'poop', 'wildcard'];
 
 
         let currentView = NAV_ITEMS[0];
@@ -329,18 +329,19 @@
 
             selectionsGrid.innerHTML = (safePlayerData.selections || []).map((selection, index) => `
                 <div class="border border-gray-200 rounded-xl p-4">
-                    <p class="font-bold text-lg mb-2" style="color: var(--primary-blue);">Selection ${index + 1}</p>
-                    <input type="text" placeholder="Song Name" value="${selection.songName || ''}" data-field="selections" data-index="${index}" data-type="songName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
-                    <input type="text" placeholder="Artist Name" value="${selection.artistName || ''}" data-field="selections" data-index="${index}" data-type="artistName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
+                    <p class="font-bold mb-2" style="color: var(--primary-blue);">Selection ${index + 1}</p>
+                    <input type="text" placeholder="Song" value="${selection.songName || ''}" data-field="selections" data-index="${index}" data-type="songName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
+                    <input type="text" placeholder="Artist" value="${selection.artistName || ''}" data-field="selections" data-index="${index}" data-type="artistName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
                     <div class="flex space-x-4">
-                        <input type="text" placeholder="Rank" value="${selection.rank || ''}" data-field="selections" data-index="${index}" data-type="rank" class="form-input w-1/2 border-b-2 focus:ring-0">
-                        <input type="number" placeholder="Score" value="${selection.score || ''}" data-field="selections" data-index="${index}" data-type="score" class="form-input w-1/2 border-b-2 focus:ring-0">
+                        <p>Rank:</p>
+                        <input type="text" placeholder="--" value="${selection.rank || ''}" data-field="selections" data-index="${index}" data-type="rank" class="form-input w-1/2 border-b-2 focus:ring-0">
+                        <p>Points:</p>
+                        <input type="number" placeholder="--" value="${selection.score || ''}" data-field="selections" data-index="${index}" data-type="score" class="form-input w-1/2 border-b-2 focus:ring-0">
                     </div>
                 </div>
             `).join('');
 
             const bonusFields = [
-                { id: 'joker', label: 'Joker' },
                 { id: 'topDecade', label: 'Top Decade' },
                 { id: 'topArtist', label: 'Top Artist' },
                 { id: 'poop', label: 'Poop' },
