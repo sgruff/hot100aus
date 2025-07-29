@@ -274,37 +274,14 @@
             }
         }
 
-       function setupListeners() {
+        function setupListeners() {
             if (unsubscribeLeaderboard) unsubscribeLeaderboard();
             const playersColRef = collection(db, `artifacts/${appId}/public/data/players`);
             unsubscribeLeaderboard = onSnapshot(playersColRef, (snapshot) => {
-                const docChanges = snapshot.docChanges();
-                // ... your existing logic for docChanges ...
-                if (docChanges.length > PLAYER_NAMES.length / 2) { 
-                    allPlayersData = {};
-                    snapshot.docs.forEach(doc => {
-                        allPlayersData[doc.id] = doc.data();
-                    });
-                } else {
-                    docChanges.forEach((change) => {
-                        if (change.type === "added" || change.type === "modified") {
-                            allPlayersData[change.doc.id] = change.doc.data();
-                        }
-                        if (change.type === "removed") {
-                            delete allPlayersData[change.doc.id];
-                        }
-                    });
-                }
-
-                renderLeaderboard();
-                if (currentView === 'Scoreboard') {
-                    renderScoreboard();
-                } else if (allPlayersData[currentView]) { // ADD THIS LINE
-                    renderBallot(allPlayersData[currentView]); // AND THIS LINE
-                }
-            });
-        }
-
+                allPlayersData = {};
+                snapshot.docs.forEach(doc => {
+                    allPlayersData[doc.id] = doc.data();
+                });
                 renderLeaderboard();
                 if (currentView === 'Scoreboard') {
                     renderScoreboard();
@@ -349,19 +326,18 @@
 
             selectionsGrid.innerHTML = (safePlayerData.selections || []).map((selection, index) => `
                 <div class="border border-gray-200 rounded-xl p-4">
-                    <p class="font-bold mb-2" style="color: var(--primary-blue);">Selection ${index + 1}</p>
-                    <input type="text" placeholder="Song" value="${selection.songName || ''}" data-field="selections" data-index="${index}" data-type="songName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
-                    <input type="text" placeholder="Artist" value="${selection.artistName || ''}" data-field="selections" data-index="${index}" data-type="artistName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
+                    <p class="font-bold text-lg mb-2" style="color: var(--primary-blue);">Selection ${index + 1}</p>
+                    <input type="text" placeholder="Song Name" value="${selection.songName || ''}" data-field="selections" data-index="${index}" data-type="songName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
+                    <input type="text" placeholder="Artist Name" value="${selection.artistName || ''}" data-field="selections" data-index="${index}" data-type="artistName" class="form-input w-full mb-2 border-b-2 focus:ring-0">
                     <div class="flex space-x-4">
-                        <p>Rank:</p>
-                        <input type="text" placeholder="--" value="${selection.rank || ''}" data-field="selections" data-index="${index}" data-type="rank" class="form-input w-1/2 border-b-2 focus:ring-0">
-                        <p>Points:</p>
-                        <input type="number" placeholder="--" value="${selection.score || ''}" data-field="selections" data-index="${index}" data-type="score" class="form-input w-1/2 border-b-2 focus:ring-0">
+                        <input type="text" placeholder="Rank" value="${selection.rank || ''}" data-field="selections" data-index="${index}" data-type="rank" class="form-input w-1/2 border-b-2 focus:ring-0">
+                        <input type="number" placeholder="Score" value="${selection.score || ''}" data-field="selections" data-index="${index}" data-type="score" class="form-input w-1/2 border-b-2 focus:ring-0">
                     </div>
                 </div>
             `).join('');
 
             const bonusFields = [
+                { id: 'joker', label: 'Joker' },
                 { id: 'topDecade', label: 'Top Decade' },
                 { id: 'topArtist', label: 'Top Artist' },
                 { id: 'poop', label: 'Poop' },
@@ -429,7 +405,10 @@
 
                             return `<li class="flex items-center p-1 rounded-md ${borderClass}" style="${backgroundStyle} ${borderColor}">
                                 <div class="w-6 flex-shrink-0">${isJoker ? ICONS.joker : ''}</div>
-                                <div class="relative"><input type="checkbox" class="${checkboxClass}" data-player="${name}" data-index="${index}" data-type="A" ${isArtistCorrect ? 'checked' : ''}><span class="checkbox-label">A</span></div>                                <div class="relative ml-1"><input type="number" class="${rankInputClass}" placeholder="--" value="${s.rank || ''}" data-player="${name}" data-index="${index}" data-type="rank"></div>
+                                <div class="flex items-center space-x-1">
+                                    <div class="relative"><input type="checkbox" class="${checkboxClass}" data-player="${name}" data-index="${index}" data-type="A" ${isArtistCorrect ? 'checked' : ''}><span class="checkbox-label">A</span></div>
+                                    <div class="relative"><input type="number" class="${rankInputClass}" placeholder="--" value="${s.rank || ''}" data-player="${name}" data-index="${index}" data-type="rank"></div>
+                                </div>
                                 <div class="flex-1 break-words ml-2" style="${textStyle}">
                                     <p class="${songClasses}">${s.songName || '...'}</p>
                                     <p class="${artistClasses}">${s.artistName || '...'}</p>
@@ -448,12 +427,12 @@
                              const isCorrect = val.correct || false;
                              const textStyle = isCorrect ? `color: var(--primary-blue); font-weight: 600;` : `color: var(--grey);`;
                              const backgroundStyle = isCorrect ? `background-color: var(--light-blue);` : '';
-                             return `<li class="flex items-center p-1 rounded-md ${borderClass}" style="${backgroundStyle} ${borderColor}">
-                                        <div class="w-6 flex-shrink-0">${isJoker ? ICONS.joker : ''}</div>
-                                        <div class="relative"><input type="checkbox" class="${checkboxClass}" data-player="${name}" data-index="${index}" data-type="A" ${isArtistCorrect ? 'checked' : ''}><span class="checkbox-label">A</span></div>
-                                        <div class="relative ml-1"><input type="number" class="${rankInputClass}" placeholder="--" value="${s.rank || ''}" data-player="${name}" data-index="${index}" data-type="rank"></div>
-                                        ...
-                                    </li>`
+                             return `<li class="flex items-center p-1 rounded-md" style="${backgroundStyle}">
+                                <div class="w-6 flex-shrink-0 mr-2">${ICONS[key]}</div>
+                                <div class="relative"><input type="checkbox" class="small-checkbox mx-1" data-player="${name}" data-index="${key}" data-type="bonus_single" ${isCorrect ? 'checked' : ''}></div>
+                                <div class="flex-1 break-words ml-2" style="${textStyle}">${val.name || '...'}</div>
+                                <div class="text-right ml-1 font-semibold" style="${textStyle}">(${val.score || 0})</div>
+                             </li>`
                         }).join('')}
                     </ul>
                 </div>`;
@@ -467,7 +446,7 @@
             });
         }
 
-function switchView(newView) {
+        function switchView(newView) {
             currentView = newView;
             renderTabs();
             if (newView === 'Scoreboard') {
@@ -477,7 +456,6 @@ function switchView(newView) {
             } else {
                 scoreboardView.style.display = 'none';
                 ballotView.style.display = 'block';
-                // This check prevents the crash by only rendering if data is ready.
                 if (allPlayersData[currentView]) {
                     renderBallot(allPlayersData[currentView]);
                 }
@@ -523,7 +501,7 @@ function switchView(newView) {
             const playerDocRef = doc(db, `artifacts/${appId}/public/data/players`, player);
             await setDoc(playerDocRef, updatedPlayerData);
         }
-        
+
         async function handleScoreboardRankChange(e) {
             const { player, index } = e.target.dataset;
             if (!allPlayersData[player]) return;
@@ -560,8 +538,8 @@ function switchView(newView) {
                 let artistScore = sel.artistCorrect ? 2 : 0;
                 
                 let currentSelectionScore = rankScore + artistScore;
-
-if (index === 0 && (rankScore > 0 || artistScore > 0)) { // Joker doubles the rank and artist score
+                
+                if (index === 0 && (rankScore > 0 || artistScore > 0)) { 
                     currentSelectionScore *= 2;
                 }
                 
