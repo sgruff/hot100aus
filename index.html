@@ -274,13 +274,12 @@
             }
         }
 
-        function setupListeners() {
+       function setupListeners() {
             if (unsubscribeLeaderboard) unsubscribeLeaderboard();
             const playersColRef = collection(db, `artifacts/${appId}/public/data/players`);
             unsubscribeLeaderboard = onSnapshot(playersColRef, (snapshot) => {
                 const docChanges = snapshot.docChanges();
-                // If there are many changes, it's an initial load, so rebuild everything.
-                // Otherwise, only update the changed docs to prevent re-rendering active inputs.
+                // ... your existing logic for docChanges ...
                 if (docChanges.length > PLAYER_NAMES.length / 2) { 
                     allPlayersData = {};
                     snapshot.docs.forEach(doc => {
@@ -296,6 +295,15 @@
                         }
                     });
                 }
+
+                renderLeaderboard();
+                if (currentView === 'Scoreboard') {
+                    renderScoreboard();
+                } else if (allPlayersData[currentView]) { // ADD THIS LINE
+                    renderBallot(allPlayersData[currentView]); // AND THIS LINE
+                }
+            });
+        }
 
                 renderLeaderboard();
                 if (currentView === 'Scoreboard') {
@@ -459,7 +467,7 @@
             });
         }
 
-        function switchView(newView) {
+function switchView(newView) {
             currentView = newView;
             renderTabs();
             if (newView === 'Scoreboard') {
@@ -469,10 +477,7 @@
             } else {
                 scoreboardView.style.display = 'none';
                 ballotView.style.display = 'block';
-                // Render a blank ballot immediately to prevent interaction with old data
-                selectionsGrid.innerHTML = ''; 
-                bonusesSection.innerHTML = '';
-                // The onSnapshot listener will fill it with data when it arrives
+                // This check prevents the crash by only rendering if data is ready.
                 if (allPlayersData[currentView]) {
                     renderBallot(allPlayersData[currentView]);
                 }
