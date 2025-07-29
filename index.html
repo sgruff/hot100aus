@@ -11,6 +11,8 @@
     <style>
         :root {
             --primary-blue: #0071bc;
+            --missed-out-red: #B80F0A;
+            --pale-red: #FEE2E2;
             --grey: #555555;
             --light-blue: #e5f1f8;
             --light-grey: #aaaaaa;
@@ -72,6 +74,16 @@
         }
         .small-checkbox:checked + .checkbox-label {
             display: none;
+        }
+        .small-checkbox.missed-out:checked {
+        background-color: var(--missed-out-red);
+        border-color: var(--missed-out-red);
+        }
+        .rank-input.missed-out {
+            border-color: var(--missed-out-red);
+            background-color: var(--missed-out-red);
+            color: white;
+            font-weight: 600;
         }
         .rank-input {
             width: 2rem; /* 1.25rem * 1.6 */
@@ -372,20 +384,33 @@
                             const isArtistCorrect = s.artistCorrect || false;
                             const hasRank = s.rank && s.rank > 0;
                             const isJoker = index === 0;
-                            
+                            const rankValue = parseInt(s.rank, 10);
+                            const missedOut = rankValue >= 101 && rankValue <= 200;
+
                             let songClasses = 'italic font-extralight';
                             let artistClasses = 'font-extralight';
                             let textStyle = `color: var(--grey);`;
                             let scoreStyle = `color: var(--light-grey);`;
                             let backgroundStyle = '';
-
-                            if (hasRank) {
+                            let checkboxClass = 'small-checkbox'; // Default class
+                            let rankInputClass = 'rank-input'; // Default class
+                
+                            if (missedOut) {
+                                songClasses = 'italic font-semibold';
+                                artistClasses = 'font-semibold';
+                                textStyle = `color: var(--missed-out-red);`;
+                                scoreStyle = `color: var(--grey);`;
+                                backgroundStyle = `background-color: var(--pale-red);`;
+                                rankInputClass = 'rank-input missed-out';
+                                checkboxClass = 'small-checkbox missed-out';
+                            } else if (hasRank) { // This is the existing logic for ranks 1-100
                                 songClasses = 'italic font-semibold';
                                 artistClasses = 'font-semibold';
                                 textStyle = `color: var(--primary-blue);`;
                                 scoreStyle = `color: var(--grey);`;
                                 backgroundStyle = `background-color: var(--light-blue);`;
-                            } else if (isArtistCorrect) {
+                                rankInputClass = 'rank-input active';
+                            } else if (isArtistCorrect) { // Existing logic for only artist correct
                                 artistClasses = 'font-semibold';
                                 textStyle = `color: var(--primary-blue);`;
                             }
@@ -416,12 +441,12 @@
                              const isCorrect = val.correct || false;
                              const textStyle = isCorrect ? `color: var(--primary-blue); font-weight: 600;` : `color: var(--grey);`;
                              const backgroundStyle = isCorrect ? `background-color: var(--light-blue);` : '';
-                             return `<li class="flex items-center p-1 rounded-md" style="${backgroundStyle}">
-                                <div class="w-6 flex-shrink-0 mr-2">${ICONS[key]}</div>
-                                <div class="relative"><input type="checkbox" class="small-checkbox mx-1" data-player="${name}" data-index="${key}" data-type="bonus_single" ${isCorrect ? 'checked' : ''}></div>
-                                <div class="flex-1 break-words ml-2" style="${textStyle}">${val.name || '...'}</div>
-                                <div class="text-right ml-1 font-semibold" style="${textStyle}">(${val.score || 0})</div>
-                             </li>`
+                             return `<li class="flex items-center p-1 rounded-md ${borderClass}" style="${backgroundStyle} ${borderColor}">
+                                        <div class="w-6 flex-shrink-0">${isJoker ? ICONS.joker : ''}</div>
+                                        <div class="relative"><input type="checkbox" class="${checkboxClass}" data-player="${name}" data-index="${index}" data-type="A" ${isArtistCorrect ? 'checked' : ''}><span class="checkbox-label">A</span></div>
+                                        <div class="relative ml-1"><input type="number" class="${rankInputClass}" placeholder="--" value="${s.rank || ''}" data-player="${name}" data-index="${index}" data-type="rank"></div>
+                                        ...
+                                    </li>`
                         }).join('')}
                     </ul>
                 </div>`;
@@ -531,7 +556,7 @@
                 let artistScore = sel.artistCorrect ? 2 : 0;
                 
                 let currentSelectionScore = rankScore + artistScore;
-                
+
 if (index === 0 && (rankScore > 0 || artistScore > 0)) { // Joker doubles the rank and artist score
                     currentSelectionScore *= 2;
                 }
