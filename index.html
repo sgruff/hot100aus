@@ -382,19 +382,20 @@
                     <ul class="text-xs space-y-1">
                         ${(p.selections || []).map((s, index) => {
                             const isArtistCorrect = s.artistCorrect || false;
-                            const hasRank = s.rank && s.rank > 0;
-                            const isJoker = index === 0;
                             const rankValue = parseInt(s.rank, 10);
-                            const missedOut = rankValue >= 101 && rankValue <= 200;
-
+                            const hasRank = !isNaN(rankValue) && rankValue > 0;
+                            const isJoker = index === 0;
+                            const missedOut = hasRank && rankValue >= 101 && rankValue <= 200;
+                            const madeItIn = hasRank && rankValue >= 1 && rankValue <= 100;
+                            
                             let songClasses = 'italic font-extralight';
                             let artistClasses = 'font-extralight';
                             let textStyle = `color: var(--grey);`;
                             let scoreStyle = `color: var(--light-grey);`;
                             let backgroundStyle = '';
-                            let checkboxClass = 'small-checkbox'; // Default class
-                            let rankInputClass = 'rank-input'; // Default class
-                
+                            let checkboxClass = 'small-checkbox';
+                            let rankInputClass = 'rank-input';
+
                             if (missedOut) {
                                 songClasses = 'italic font-semibold';
                                 artistClasses = 'font-semibold';
@@ -403,26 +404,24 @@
                                 backgroundStyle = `background-color: var(--pale-red);`;
                                 rankInputClass = 'rank-input missed-out';
                                 checkboxClass = 'small-checkbox missed-out';
-                            } else if (hasRank) { // This is the existing logic for ranks 1-100
+                            } else if (madeItIn) {
                                 songClasses = 'italic font-semibold';
                                 artistClasses = 'font-semibold';
                                 textStyle = `color: var(--primary-blue);`;
                                 scoreStyle = `color: var(--grey);`;
                                 backgroundStyle = `background-color: var(--light-blue);`;
                                 rankInputClass = 'rank-input active';
-                            } else if (isArtistCorrect) { // Existing logic for only artist correct
+                            } else if (isArtistCorrect) {
                                 artistClasses = 'font-semibold';
                                 textStyle = `color: var(--primary-blue);`;
                             }
 
                             const borderClass = isJoker ? 'border rounded-md' : '';
                             const borderColor = isJoker ? `border-color: var(--primary-blue);` : '';
-                            const rankInputClass = hasRank ? 'rank-input active' : 'rank-input';
 
                             return `<li class="flex items-center p-1 rounded-md ${borderClass}" style="${backgroundStyle} ${borderColor}">
                                 <div class="w-6 flex-shrink-0">${isJoker ? ICONS.joker : ''}</div>
-                                <div class="relative"><input type="checkbox" class="small-checkbox" data-player="${name}" data-index="${index}" data-type="A" ${isArtistCorrect ? 'checked' : ''}><span class="checkbox-label">A</span></div>
-                                <div class="relative ml-1"><input type="number" class="${rankInputClass}" placeholder="--" value="${s.rank || ''}" data-player="${name}" data-index="${index}" data-type="rank"></div>
+                                <div class="relative"><input type="checkbox" class="${checkboxClass}" data-player="${name}" data-index="${index}" data-type="A" ${isArtistCorrect ? 'checked' : ''}><span class="checkbox-label">A</span></div>                                <div class="relative ml-1"><input type="number" class="${rankInputClass}" placeholder="--" value="${s.rank || ''}" data-player="${name}" data-index="${index}" data-type="rank"></div>
                                 <div class="flex-1 break-words ml-2" style="${textStyle}">
                                     <p class="${songClasses}">${s.songName || '...'}</p>
                                     <p class="${artistClasses}">${s.artistName || '...'}</p>
